@@ -242,7 +242,7 @@ export class ProductCardsController extends BaseController {
 	}
 
 	async uploadImages({ files, params }: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
+		try {
 			const { id } = params;
 			const card = await this.productCardsServices.getProductCard(id);
 			if(!card) {
@@ -261,9 +261,12 @@ export class ProductCardsController extends BaseController {
                 const downloads = images.map(image => {
                     return new Promise<IUploadImage | undefined>(rej => {
                         const folderPath = join(__dirname, '../public/uploads/', `productId_${id}`);
+						console.log(folderPath);
                         if (!existsSync(folderPath)) {
                             mkdirSync(folderPath);
                         }
+					
+						
                         const imageId = uuidv4();
                         const uploadPath = join(folderPath, `/${imageId}${image.name}`);
 
