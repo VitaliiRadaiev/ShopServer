@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model AdminModel {
+  id       String @id @default(uuid())
+  name     String @unique
+  password String
+}
+
+model UserModel {
+  id                      String                   @id @default(uuid())
+  isIdentified            Boolean
+  email                   String?                  @unique
+  firstName               String?
+  lastName                String?
+  password                String?
+  phone                   String?
+  basket                  BasketModel?
+  wishList                WishListModel?
+  history                 HistoryModel?
+  lastViewedProductsModel LastViewedProductsModel?
+  comments                CommentModel[]
+  likes                   LikesModel[]
+  dislikes                DislikesModel[]
+  orders                  OrderModel[]
+}
+
+model BasketModel {
+  id         String              @id @default(uuid())
+  userId     String              @unique
+  user       UserModel           @relation(fields: [userId], references: [id])
+  products   OrderProductModel[]
+  totalPrice Int
+}
+
+model OrderProductModel {
+  id            String           @id @default(uuid())
+  product       ProductCardModel @relation(fields: [productCardId], references: [id])
+  productCardId String
+  count         Int
+  basket        BasketModel?     @relation(fields: [basketId], references: [id])
+  basketId      String?
+  order         OrderModel?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId       Int?
+}
+
+model WishListModel {
+  id       String             @id @default(uuid())
+  userId   String             @unique
+  user     UserModel          @relation(fields: [userId], references: [id])
+  products ProductCardModel[]
+}
+
+model LastViewedProductsModel {
+  id       String             @id @default(uuid())
+  userId   String             @unique
+  user     UserModel          @relation(fields: [userId], references: [id])
+  products ProductCardModel[]
+}
+
+model HistoryModel {
+  id     String       @id @default(uuid())
+  userId String       @unique
+  user   UserModel    @relation(fields: [userId], references: [id])
+  orders OrderModel[]
+}
+
+model OrderModel {
+  id                  Int                 @id @default(autoincrement())
+  historyId           String?
+  history             HistoryModel?       @relation(fields: [historyId], references: [id])
+  createdAt           DateTime
+  status              String
+  products            OrderProductModel[]
+  totalPrice          Int
+  delivery            String
+  deliveryFullAddress String
+  paymentMethod       String //"Оплата при получении товара"
+  recipient           RecipientModel?
+  userId              String
+  user                UserModel           @relation(fields: [userId], references: [id])
+}
+
+model RecipientModel {
+  id        String     @id @default(uuid())
+  orderId   Int        @unique
+  order     OrderModel @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+}
+
+model CategoryModel {
+  id       String             @id @default(uuid())
+  title    String
+  products ProductCardModel[]
+  filters  FilterBlockModel[]
+}
+
+model FilterBlockModel {
+  id         String            @id @default(uuid())
+  categoryId String
+  category   CategoryModel     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title      String
+  items      FilterItemModel[]
+}
+
+model FilterItemModel {
+  id            String             @id @default(uuid())
+  filterBlockId String
+  filterBlock   FilterBlockModel   @relation(fields: [filterBlockId], references: [id], onDelete: Cascade)
+  title         String
+  productCards  ProductCardModel[]
+}
+
+model ProductCardModel {
+  id               String                @id @default(uuid())
+  title            String
+  price            Int
+  oldPrice         Int
+  isNew            Boolean
+  inStock          Boolean
+  isPromotion      Boolean
+  isBestseller     Boolean
+  isRecommended    Boolean
+  shortDescription String
+  description      String
+  createdAt        DateTime
+  features         ProductFeatureModel[]
+  images           ImageModel[]
+  rating           Float
+  categoryId       String
+  category         CategoryModel         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  comments         CommentModel[]
+
+  filterItems        FilterItemModel[]
+  withlists          WishListModel[]
+  lastViewedProducts LastViewedProductsModel[]
+  orderProduct       OrderProductModel[]
+}
+
+model ProductFeatureModel {
+  id            String           @id @default(uuid())
+  title         String
+  value         String
+  productCardId String
+  productCard   ProductCardModel @relation(fields: [productCardId], references: [id], onDelete: Cascade)
+}
+
+model ImageModel {
+  id            String           @id @default(uuid())
+  url           String
+  isMain        Boolean
+  productCardId String
+  productCard   ProductCardModel @relation(fields: [productCardId], references: [id], onDelete: Cascade)
+}
+
+model CommentModel {
+  id          String            @id @default(uuid())
+  createdAt   DateTime
+  text        String
+  likes       LikesModel?
+  dislikes    DislikesModel?
+  stars       Int
+  subcomments SubcommentModel[]
+
+  authorId String
+  author   UserModel @relation(fields: [authorId], references: [id])
+
+  productCardId String
+  productCard   ProductCardModel @relation(fields: [productCardId], references: [id], onDelete: Cascade)
+}
+
+model LikesModel {
+  id        String       @id @default(uuid())
+  commentId String       @unique
+  comment   CommentModel @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  items     UserModel[]
+}
+
+model DislikesModel {
+  id        String       @id @default(uuid())
+  commentId String       @unique
+  comment   CommentModel @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  items     UserModel[]
+}
+
+model SubcommentModel {
+  id        String       @id @default(uuid())
+  createdAt DateTime
+  text      String
+  commentId String
+  comment   CommentModel @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
